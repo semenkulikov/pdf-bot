@@ -1,0 +1,5 @@
+aiogram
+SQLAlchemy
+python-dotenv
+asyncpg    # если планируете использовать PostgreSQL, для SQLite используется aiosqlite
+aiosqlite
