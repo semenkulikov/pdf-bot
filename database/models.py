@@ -12,6 +12,7 @@ class User(Base):
     full_name = Column(String, nullable=False)
     username = Column(String, nullable=False)
     is_premium = Column(Boolean, nullable=True)
+    is_subscribed = Column(Boolean, default=False)
 
 
 class Group(Base):
