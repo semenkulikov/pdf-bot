@@ -33,5 +33,6 @@
 * Python 3.13
 * Aiogram
 * SQLAlchemy
+* Alembic
 * aiosqlite
 * python-dotenv
