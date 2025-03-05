@@ -2,6 +2,7 @@ from aiogram import types, F
 from aiogram.fsm.context import FSMContext
 
 from keyboards.inline.inline_keyboards import is_subscribed_markup
+from keyboards.reply.handlers_reply import handlers_reply
 from loader import bot, dp, app_logger
 from config_data.config import ALLOWED_USERS, DEFAULT_COMMANDS, ADMIN_COMMANDS, CHANNEL_ID
 from database.query_orm import get_user_by_user_id, create_user, get_group_by_group_id, create_group, set_is_subscribed
@@ -29,25 +30,32 @@ async def bot_start(message: types.Message, state: FSMContext):
         commands = [f"/{cmd} - {desc}" for cmd, desc in DEFAULT_COMMANDS]
         if int(message.from_user.id) in ALLOWED_USERS:
             commands.extend([f"/{cmd} - {desc}" for cmd, desc in ADMIN_COMMANDS])
+            markup = await handlers_reply()
             await message.answer(
                 f"Здравствуйте, {message.from_user.full_name}! Вы в списке администраторов бота. \n"
-                f"Вам доступны следующие команды:\n" + "\n".join(commands)
+                f"Вам доступны следующие команды:\n" + "\n".join(commands),
+                reply_markup=markup
             )
         else:
             is_subscribed_res = await is_subscribed(CHANNEL_ID, message.from_user.id)
             if is_subscribed_res:
                 # Если пользователь подписан на канал, тогда ему можно пользоваться ботом.
+                markup = await handlers_reply()
                 await message.answer(
-                    f"""👥 Поздравляем, ты подписан на наш канал!
+                    f"""🪧 Добро пожаловать в DopeGlue!
+
+👥 Поздравляем, ты подписан на наш канал!
 Генерация PDF теперь доступна для тебя! 
 Ты можешь начать прямо сейчас: 👇""",
-                    # reply_markup=handlers_reply()
+                    reply_markup=markup
                 )
                 await set_is_subscribed(cur_user.user_id, True)
 
             else:
                 markup = await is_subscribed_markup()
-                await message.answer("""📡 Ой, кажется, ты не подписан на канал.
+                await message.answer("""🪧 Добро пожаловать в DopeGlue!
+
+📡 Ой, кажется, ты не подписан на канал.
 Подпишись, чтобы продолжить и получить доступ к сервису!""",
                                  reply_markup=markup
                                      )
@@ -91,16 +99,22 @@ async def is_subscribed_handler(call: types.CallbackQuery, state: FSMContext):
         app_logger.info(f"Пользователь {call.from_user.full_name} подписался на канал!")
 
         await set_is_subscribed(call.from_user.id, True)
-
+        markup = await handlers_reply()
         await call.message.answer(callback_query_id=call.id,
-                                  text=f"""👥 Поздравляем, ты подписан на наш канал!
+                                  text=f"""🪧 Добро пожаловать в DopeGlue!
+
+👥 Поздравляем, ты подписан на наш канал!
 Генерация PDF теперь доступна для тебя! 
-Ты можешь начать прямо сейчас: 👇""")
+Ты можешь начать прямо сейчас: 👇""",
+                                  reply_markup=markup
+                                  )
         await state.clear()
     else:
         markup = await is_subscribed_markup()
-        await call.message.answer(callback_query_id=call.id, text="""📡 Ой, кажется, ты не подписан на канал.
-        Подпишись, чтобы продолжить и получить доступ к сервису!""",
+        await call.message.answer(callback_query_id=call.id, text="""🪧 Добро пожаловать в DopeGlue!
+
+📡 Ой, кажется, ты не подписан на канал.
+Подпишись, чтобы продолжить и получить доступ к сервису!""",
                              reply_markup=markup
                              )
         await set_is_subscribed(call.from_user.id, True)
