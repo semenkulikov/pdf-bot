@@ -20,3 +20,5 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 DATABASE_PATH = os.path.join(BASE_DIR, "database", "database.db")
 DATABASE_URL = f"sqlite+aiosqlite:///{DATABASE_PATH}"
+
+CHANNEL_ID = os.getenv('CHANNEL_ID')

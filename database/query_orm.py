@@ -3,24 +3,30 @@ from database.models import User, Group
 from database.engine import async_session
 
 async def get_user_by_user_id(user_id: str):
+    """ Получить пользователя по его id """
     async with async_session() as session:
         result = await session.execute(select(User).where(User.user_id == user_id))
         return result.scalars().first()
 
-async def create_user(user_id: str, full_name: str, username: str, is_premium: bool = None):
+async def create_user(user_id: str, full_name: str, username: str, is_premium: bool = None, is_subscribed=False):
+    """ Создать объект пользователя """
     async with async_session() as session:
-        user = User(user_id=user_id, full_name=full_name, username=username, is_premium=is_premium)
+        user = User(user_id=user_id, full_name=full_name,
+                    username=username, is_premium=is_premium,
+                    is_subscribed=is_subscribed)
         session.add(user)
         await session.commit()
         return user
 
 async def get_group_by_group_id(group_id: str):
+    """ Получить группу по ее ID """
     async with async_session() as session:
         result = await session.execute(select(Group).where(Group.group_id == group_id))
         return result.scalars().first()
 
 async def create_group(group_id: str, title: str, description: str = None, bio: str = None,
                        invite_link: str = None, location: str = None, username: str = None):
+    """ Создать группу с заданными полями """
     async with async_session() as session:
         group = Group(
             group_id=group_id,
@@ -36,15 +42,16 @@ async def create_group(group_id: str, title: str, description: str = None, bio: 
         return group
 
 async def get_all_users():
+    """ Получить всех пользователей """
     async with async_session() as session:
         result = await session.execute(select(User))
         return result.scalars().all()
 
-async def update_user_invoice(user_id: str, invoice_path: str):
+
+async def set_is_subscribed(user_id: str, value: bool):
+    """ Установить статус подписки пользователя на заданный """
     async with async_session() as session:
-        result = await session.execute(select(User).where(User.user_id == user_id))
-        user = result.scalars().first()
+        user = await get_user_by_user_id(user_id)
         if user:
-            user.path_to_invoice = invoice_path
+            user.is_subscribed = value
             await session.commit()
-        return user
