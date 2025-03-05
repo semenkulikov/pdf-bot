@@ -16,6 +16,9 @@ ADMIN_COMMANDS = (
 )
 ADMIN_ID = os.getenv('ADMIN_ID')
 ALLOWED_USERS = [int(ADMIN_ID)]
+SUPPORTED_USERS = [
+    "@username"
+]
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 DATABASE_PATH = os.path.join(BASE_DIR, "database", "database.db")
