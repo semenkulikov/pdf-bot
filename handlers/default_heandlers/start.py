@@ -1,14 +1,18 @@
-from aiogram import types
+from aiogram import types, F
+from aiogram.fsm.context import FSMContext
+
+from keyboards.inline.inline_keyboards import is_subscribed_markup
 from loader import bot, dp, app_logger
 from config_data.config import ALLOWED_USERS, DEFAULT_COMMANDS, ADMIN_COMMANDS, CHANNEL_ID
 from database.query_orm import get_user_by_user_id, create_user, get_group_by_group_id, create_group, set_is_subscribed
-from aiogram.filters import Command
+from aiogram.filters import Command, StateFilter
 
+from states.states import SubscribedState
 from utils.functions import is_subscribed
 
 
 @dp.message(Command('start'))
-async def bot_start(message: types.Message):
+async def bot_start(message: types.Message, state: FSMContext):
 
     if message.chat.type == 'private':
         is_sub = True if message.from_user.id in ALLOWED_USERS else False
@@ -42,12 +46,13 @@ async def bot_start(message: types.Message):
                 await set_is_subscribed(cur_user.user_id, True)
 
             else:
+                markup = await is_subscribed_markup()
                 await message.answer("""📡 Ой, кажется, ты не подписан на канал.
 Подпишись, чтобы продолжить и получить доступ к сервису!""",
-                                 # reply_markup=is_subscribed_markup()
+                                 reply_markup=markup
                                      )
                 await set_is_subscribed(cur_user.user_id, True)
-                # await bot.set_state(message.from_user.id, SubscribedState.subscribe)
+                await state.set_state(SubscribedState.subscribe)
     else:
         await message.answer(
             "Здравствуйте! Я — телеграм-бот, модератор каналов и групп. "
@@ -74,3 +79,28 @@ async def bot_start(message: types.Message):
                 is_premium=getattr(message.from_user, 'is_premium', None)
             )
         app_logger.info(f"Новый пользователь: {message.from_user.full_name} — {message.from_user.username}")
+
+
+@dp.callback_query(StateFilter(SubscribedState.subscribe))
+async def is_subscribed_handler(call: types.CallbackQuery, state: FSMContext):
+    """ Callback хендлер для проверки подписки """
+    await call.answer()
+
+    is_subscribed_res = await is_subscribed(CHANNEL_ID, call.from_user.id)
+    if is_subscribed_res:
+        app_logger.info(f"Пользователь {call.from_user.full_name} подписался на канал!")
+
+        await set_is_subscribed(call.from_user.id, True)
+
+        await call.message.answer(callback_query_id=call.id,
+                                  text=f"""👥 Поздравляем, ты подписан на наш канал!
+Генерация PDF теперь доступна для тебя! 
+Ты можешь начать прямо сейчас: 👇""")
+        await state.clear()
+    else:
+        markup = await is_subscribed_markup()
+        await call.message.answer(callback_query_id=call.id, text="""📡 Ой, кажется, ты не подписан на канал.
+        Подпишись, чтобы продолжить и получить доступ к сервису!""",
+                             reply_markup=markup
+                             )
+        await set_is_subscribed(call.from_user.id, True)
