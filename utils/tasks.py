@@ -1,5 +1,4 @@
 from asyncio import sleep
-
 from config_data.config import CHANNEL_ID
 from database.query_orm import get_all_users, set_is_subscribed
 from loader import app_logger, bot
