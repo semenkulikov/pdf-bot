@@ -5,6 +5,7 @@ from utils.set_bot_commands import set_default_commands
 from database.engine import engine
 from database.models import Base
 from config_data.config import ADMIN_ID
+from utils.tasks import check_is_sub
 import handlers
 
 async def main():
@@ -23,6 +24,9 @@ async def main():
         await bot.send_message(ADMIN_ID, "Бот запущен.")
     except Exception as e:
         app_logger.error(f"Ошибка при отправке сообщения администратору: {e}")
+
+    # Запуск чекера подписки
+    asyncio.create_task(check_is_sub())
 
     await dp.start_polling(bot)
 
