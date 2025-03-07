@@ -1,5 +1,5 @@
 from sqlalchemy.future import select
-from database.models import User, Group
+from database.models import User, Group, PDFService, PDFCountry
 from database.engine import async_session
 
 async def get_user_by_user_id(user_id: str):
@@ -55,3 +55,37 @@ async def set_is_subscribed(user_id: str, value: bool):
         if user:
             user.is_subscribed = value
             await session.commit()
+
+async def get_all_pdf_countries():
+    async with async_session() as session:
+        result = await session.execute(select(PDFCountry))
+        return result.scalars().all()
+
+async def get_pdf_country_by_code(code: str):
+    async with async_session() as session:
+        result = await session.execute(select(PDFCountry).where(PDFCountry.code == code))
+        return result.scalars().first()
+
+async def create_pdf_country(name: str, code: str):
+    async with async_session() as session:
+        country = PDFCountry(name=name, code=code)
+        session.add(country)
+        await session.commit()
+        return country
+
+async def get_pdf_services_by_country_id(country_id: int):
+    async with async_session() as session:
+        result = await session.execute(select(PDFService).where(PDFService.country_id == country_id))
+        return result.scalars().all()
+
+async def get_pdf_service_by_id(service_id: int):
+    async with async_session() as session:
+        result = await session.execute(select(PDFService).where(PDFService.id == service_id))
+        return result.scalars().first()
+
+async def create_pdf_service(name: str, country_id: int, template_fields: str = None):
+    async with async_session() as session:
+        service = PDFService(name=name, country_id=country_id, template_fields=template_fields)
+        session.add(service)
+        await session.commit()
+        return service

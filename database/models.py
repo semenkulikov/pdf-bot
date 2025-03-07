@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, Text
-from sqlalchemy.orm import declarative_base
+from sqlalchemy import Column, Integer, String, Boolean, Text, ForeignKey
+from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
 
@@ -26,3 +26,26 @@ class Group(Base):
     invite_link = Column(String, nullable=True)
     location = Column(String, nullable=True)
     username = Column(String, nullable=True)
+
+
+class PDFCountry(Base):
+    __tablename__ = 'pdf_countries'
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, nullable=False)
+    code = Column(String, unique=True, nullable=False)
+
+    services = relationship("PDFService", back_populates="country", cascade="all, delete-orphan")
+
+
+class PDFService(Base):
+    __tablename__ = 'pdf_services'
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)  # Например: "Leboncoin", "Ebay"
+    country_id = Column(Integer, ForeignKey('pdf_countries.id'), nullable=False)
+
+    # Дополнительные поля для шаблона PDF (будут расширяться в будущем)
+    template_fields = Column(Text, nullable=True, comment="JSON с описанием полей шаблона")
+
+    country = relationship("PDFCountry", back_populates="services")
